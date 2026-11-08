@@ -1,37 +1,29 @@
-# Yêu cầu dự án - Bài kiểm tra Track B (Vườn Toán Lớp 3)
+# Yêu cầu dự án - Track B (Ước lượng trước khi tính đúng)
 
 ## 1. Phạm vi dự án (Scope)
-Xây dựng một dạng bài tập tương tác Toán lớp 3: **Kéo thả thẻ phân số**.
-Học sinh sẽ được cung cấp 3 thẻ chữ (chứa các phân số 1/2, 1/3, 1/4) và 3 hình vẽ minh họa (ví dụ: hình tròn chia 2 phần tô màu 1 phần, chia 3 phần tô màu 1 phần...). Nhiệm vụ của học sinh là kéo thẻ phân số tương ứng thả vào ô nhận đáp án bên dưới mỗi hình.
+Mở rộng hệ thống luyện tập hiện có bằng cách thêm dạng bài "Ước lượng kết quả trước khi tính đúng" cho các phép nhân/chia. Học sinh sẽ phải nhập một khoảng hoặc giá trị ước lượng hợp lý vào hệ thống trước khi xem/thực hiện bước tính chính xác. 
+Toàn bộ logic kiểm tra đúng/sai phải được xử lý ở phía Server, không sử dụng LLM, và không làm thay đổi các cơ chế xác thực hay hệ thống tài khoản mẫu hiện tại.
 
 ## 2. Tiêu chí nghiệm thu (Acceptance Criteria)
 
-**AC1: Hiển thị giao diện bài tập**
-* **Given** học sinh mở bài tập kéo thả phân số "Một phần mấy".
-* **When** màn hình tải xong hoàn toàn.
-* **Then** hệ thống phải hiển thị ngẫu nhiên 3 hình minh họa và 3 thẻ đáp án (1/2, 1/3, 1/4) không theo thứ tự khớp nhau, cùng với nút "Nộp bài" bị làm mờ (disabled).
+* **B-01:** Dạng bài "Ước lượng" phải được tích hợp vào luồng học hiện tại, không phải là một trang demo tĩnh rời rạc.
+* **B-02:** Hệ thống có tối thiểu 12 câu hỏi/fixture synthetic cho dạng bài này.
+* **B-03:** Quy tắc chấm điểm "ước lượng hợp lý" được mô tả rõ ràng, có tính tất định và có thể test tự động.
+* **B-04:** API cấp phát câu hỏi (GET `/api/question-sets/:setId/questions`) KHÔNG ĐƯỢC phép trả về đáp án đúng.
+* **B-05:** Server là nơi trực tiếp chấm và lưu kết quả (POST `/api/submissions`). Khi F5/refresh trang, trạng thái bài làm không bị mất.
+* **B-06:** Hệ thống cung cấp feedback rõ ràng cho học sinh, phân biệt được thế nào là "ước lượng hợp lý" và "kết quả chính xác".
+* **B-07:** Không chỉnh sửa file `server/auth.js`, session, tài khoản mẫu hoặc cơ chế deployment.
+* **B-08:** Có bộ test tự động (Automated Tests) bao phủ các trường hợp: normal (đầu vào hợp lệ), boundary (đầu vào ở ranh giới), invalid input (đầu vào rác/chữ) và scoring logic.
+* **B-09:** Tích hợp lệnh `npm test`, đảm bảo chạy pass ngay từ clean checkout.
+* **B-10:** Bổ sung cấu hình CI chạy `npm ci` và `npm test` tự động khi có Pull Request.
+* **B-11:** Không lưu trữ PII/secret thực; chỉ dùng tài khoản synthetic.
+* **B-12:** Giao diện hỗ trợ sử dụng bằng bàn phím (Accessibility) cho luồng chính và hiển thị lỗi dễ hiểu.
 
-**AC2: Tương tác kéo và thả thẻ đáp án**
-* **Given** học sinh đang làm bài tập.
-* **When** học sinh kéo một thẻ đáp án (VD: "1/2") và thả vào vùng nhận của một hình vẽ.
-* **Then** thẻ đáp án phải khớp dính vào vị trí bên dưới hình vẽ đó. Nếu vùng nhận đã có sẵn thẻ, thẻ cũ sẽ bị đẩy trở lại khay chứa ban đầu.
+## 3. Kế hoạch kiểm thử (Test Plan sơ bộ)
 
-**AC3: Nộp bài và tính điểm (Luồng thành công)**
-* **Given** học sinh đã thả đủ 3 thẻ đáp án vào 3 hình vẽ.
-* **When** học sinh nhấn nút "Nộp bài".
-* **Then** hệ thống khóa chức năng kéo thả, bôi màu xanh cho các thẻ đặt đúng vị trí, hiển thị thông báo "Chúc mừng" và cập nhật điểm số vào database.
-
-**AC4: Nộp bài và phản hồi lỗi (Luồng thất bại)**
-* **Given** học sinh đã thả đủ 3 thẻ nhưng có ít nhất 1 thẻ bị sai vị trí.
-* **When** học sinh nhấn "Nộp bài".
-* **Then** hệ thống bôi màu đỏ cho các thẻ sai, giữ nguyên màu hoặc bôi xanh thẻ đúng, và trừ đi số lượt làm bài còn lại.
-
-## 3. Kế hoạch kiểm thử (Test Plan)
-
-| Mã TC | Tên kịch bản | Các bước thực hiện (Steps) | Kết quả mong đợi (Expected Output) |
+| Mã TC | Kịch bản kiểm thử | Dữ liệu đầu vào (Input) | Kết quả mong đợi (Expected) |
 |---|---|---|---|
-| **TC_01** | Kéo thả hợp lệ | 1. Dùng chuột/cảm ứng kéo thẻ "1/3".<br>2. Thả vào vùng nhận của hình chia 3 phần. | Thẻ "1/3" nằm gọn trong vùng nhận. Không bị văng ra ngoài. |
-| **TC_02** | Thay đổi đáp án | 1. Kéo thẻ "1/4" thả vào vùng đã có thẻ "1/3". | Thẻ "1/4" chiếm chỗ, thẻ "1/3" tự động quay về khay chứa ban đầu. |
-| **TC_03** | Khóa nút nộp bài | 1. Chỉ kéo 2 thẻ vào hình, để trống 1 hình. | Nút "Nộp bài" ở trạng thái mờ (disabled) và không thể bấm được. |
-| **TC_04** | Nộp bài đúng 100% | 1. Kéo chính xác cả 3 thẻ vào 3 hình.<br>2. Bấm "Nộp bài". | Hiện hiệu ứng chúc mừng, ghi nhận điểm lên hệ thống, thẻ đổi sang viền xanh. |
-| **TC_05** | Nộp bài sai | 1. Kéo sai vị trí 2 thẻ.<br>2. Bấm "Nộp bài". | Hiện viền đỏ ở 2 thẻ sai. Có nút "Làm lại" hiện ra để học sinh thử lại. |
+| TC_01 | **Normal input:** Nhập ước lượng hợp lý | Câu hỏi: 48 × 6. Nhập: 300 (vì 50 × 6 = 300) | Server chấm đúng, hiển thị feedback "Ước lượng hợp lý". |
+| TC_02 | **Boundary input:** Nhập ở ranh giới | Câu hỏi: 48 × 6. Nhập: giá trị Min/Max của ngưỡng chấp nhận. | Server chấm đúng. |
+| TC_03 | **Invalid input:** Nhập ký tự không phải số | Câu hỏi: 48 × 6. Nhập: "abc" | UI báo lỗi "Vui lòng nhập số hợp lệ", không gọi API chấm. |
+| TC_04 | **B-04:** Kiểm tra lộ đáp án | Gọi API GET `/api/question-sets/...` | Payload JSON trả về không chứa trường `correct_answer`. |
